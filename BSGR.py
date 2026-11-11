@@ -64,7 +64,7 @@ def sinkhorn_knopp_entropy(U, n_min, n_max, epsilon=0.001, max_iter=100, tol=1e-
     F = (u[:, None] * K) * (q * v)[None, :]
     return F
 
-def sinkhorn_rounding(F_soft, n_min, n_max):
+def discrete_rounding(F_soft, n_min, n_max):
 
     n, c = F_soft.shape
     labels = np.argmax(F_soft, axis=1)
@@ -74,7 +74,7 @@ def sinkhorn_rounding(F_soft, n_min, n_max):
     for cls in range(c):
         while counts[cls] > n_max:
             idx = np.where(labels == cls)[0]
-            i = idx[np.argmin(F_soft[idx, cls])]  # 移除最低概率的样本
+            i = idx[np.argmin(F_soft[idx, cls])] 
             F_soft[i, cls] = -np.inf
             labels[i] = np.argmax(F_soft[i])
             counts = np.bincount(labels, minlength=c)
@@ -86,7 +86,7 @@ def sinkhorn_rounding(F_soft, n_min, n_max):
             if counts[donor] <= n_min or donor == cls:
                 break
             idx = np.where(labels == donor)[0]
-            i = idx[np.argmax(F_soft[idx, cls])]  # 转移对 cls 有高置信度的样本
+            i = idx[np.argmax(F_soft[idx, cls])] 
             labels[i] = cls
             counts = np.bincount(labels, minlength=c)
 
@@ -179,7 +179,7 @@ def opt(W, U, NITER,n_max,n_min):
     #update F
         H = 2*s*U.T@W.T
         F = sinkhorn_knopp_entropy(H.T,n_min,n_max)
-        F = sinkhorn_rounding(F, n_min, n_max)
+        F = discrete_rounding(F, n_min, n_max)
     #update U
         H1 = 2*s*F.T@W
         U1, _, VT = np.linalg.svd(H1, full_matrices=False)
